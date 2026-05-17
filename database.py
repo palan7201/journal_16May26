@@ -30,17 +30,20 @@ if (len(sys.argv)>1):
     request_date = sys.argv[1]
 else:
     request_date = current_date
+print("Requested date : %s" %request_date, file = sys.stderr)
 
 #Processing command-line arguments
-#find if the journal should be created or updated - database
 db_file = cursor.execute("""select journal_text from entries where journal_date = '%s';""" %request_date)
 db_file = cursor.fetchone()
+j_header = ''
 
+#find if the journal should be created or updated - database
 if(db_file is not None):
+    #reading query result - journal_text
     j_file.write(db_file[0])
     modified = True
 else:
-    # Writing file header & TODO: new row - database
+    # Writing file header
     j_header = datetime.now().strftime("%B %-d, %Y\n") #December 7, 2025
     j_header += datetime.now().strftime("%A\n") #Tuesday
     j_header += datetime.now().strftime("%I:%M:%S %p\n\n") #07:09:12 PM
@@ -53,26 +56,25 @@ subprocess.run([os.getenv("EDITOR", "nano"), "--", j_file.name])
 
 # fetch journal file data & UPSERT query
 j_file = open(j_file.name, 'r')
+journal_text = j_file.read()
+print("\nThe content read from the journal file is : \n%s" %journal_text, file = sys.stderr)
+
+# getting the journal file's opening time
 argument = j_header.split()
 created_at = ''
 updated_at = created_at = created_at.join(argument[-2:])
 
+#writing to database
 if(modified):
     update = """update entries set journal_text= ?, updated_at=? where journal_date = ?"""
-    cursor.execute(update, (j_file, updated_at, request_date))
-
+    cursor.execute(update, (journal_text, updated_at, request_date))
+    print("Updated the journal", file = sys.stderr)
 else:
-    insert = """insert into entries(journal_date, journal_text, ) values (?, ?, ?)"""
-    cursor.execute(insert, (j_file, created_at, request_date))
+    insert = """insert into entries(journal_date, journal_text, created_at, updated_at) values (?, ?, ?, null)"""
+    cursor.execute(insert, (request_date, journal_text, created_at))
+    print("Inserted into the journal", file = sys.stderr)
 
-""" upsert = insert into entries (journal_date, journal_text, created_at, updated_at)
-                values (?, ?, ?)
-                on conflict (journal_date)
-                do update set
-                journal_text = excluded.journal_text,
-                updated_at = excluded.update_at ;
-         """
-#cursor.execute(upsert, (request_date, j_file, created_at, updated_at))
-
+#closing the connections
+connection.commit()
 j_file.close()
 cursor.close()
