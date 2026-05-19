@@ -1,4 +1,4 @@
-#journal_16May26/database.py
+#journal_15May26/database.py
 
 import sqlite3
 import subprocess
@@ -7,6 +7,27 @@ import sys
 import os
 import tempfile
 import getopt
+import tkinter as tk
+
+#Gui - tkinter
+screen = tk.Tk()
+screen.title("Journal")
+screen.geometry('600x400+150+100')
+screen.resizable(True, True)
+
+#icon = tk.PhotoImage(file = './journal_icon.png')
+#screen.iconphoto(False, icon)
+
+frame = tk.Frame()
+frame.pack()
+
+label = tk.Label(master = "frame", text = 'Wow, hello world GUI', bg = 'black', fg = 'white')
+label.pack()
+
+label = tk.Label(text = 'Wow, hello world GUI', bg = 'black', fg = 'white')
+label.pack()
+
+screen.mainloop()
 
 #Database connection - schema creation (if not exists)
 connection = sqlite3.connect("journal.db")
